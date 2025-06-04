@@ -7,13 +7,11 @@ from urllib.parse import urljoin
 import re
 import json
 
-# Approach 1: Enhanced Crunchyroll Scraper with Better Headers
 class EnhancedCrunchyrollScraper:
     def __init__(self):
         self.base_url = "https://www.crunchyroll.com"
         self.session = requests.Session()
         
-        # More comprehensive headers to bypass basic bot detection
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -34,18 +32,18 @@ class EnhancedCrunchyrollScraper:
     def get_page_with_session(self, url):
         """Try to get page with session cookies"""
         try:
-            # First, visit the main page to get session cookies
+
             self.session.get("https://www.crunchyroll.com")
             time.sleep(2)
             
-            # Then try the target URL
+
             response = self.session.get(url, timeout=15)
             return response
         except Exception as e:
             print(f"Session approach failed: {e}")
             return None
 
-# Approach 2: Alternative Anime Data Sources
+
 class AlternativeAnimeScraper:
     def __init__(self):
         self.session = requests.Session()
@@ -66,7 +64,7 @@ class AlternativeAnimeScraper:
                 response.raise_for_status()
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
-                # Find anime entries
+
                 anime_rows = soup.find_all('tr', class_='ranking-list')
                 
                 for row in anime_rows:
@@ -82,27 +80,27 @@ class AlternativeAnimeScraper:
                             'source': 'MyAnimeList'
                         }
                         
-                        # Extract title
+
                         title_elem = row.find('a', class_='hoverinfo_trigger')
                         if title_elem:
                             anime_data['title'] = title_elem.get_text(strip=True)
                         
-                        # Extract additional info
+
                         info_elem = row.find('div', class_='information')
                         if info_elem:
                             info_text = info_elem.get_text()
                             
-                            # Extract episodes
+
                             ep_match = re.search(r'(\d+) eps', info_text)
                             if ep_match:
                                 anime_data['number_of_episodes'] = ep_match.group(1)
                             
-                            # Extract year
+
                             year_match = re.search(r'(19|20)\d{2}', info_text)
                             if year_match:
                                 anime_data['release_date'] = year_match.group(0)
                             
-                            # Content type
+
                             if 'TV' in info_text:
                                 anime_data['content_type'] = 'TV Series'
                             elif 'Movie' in info_text:
@@ -110,7 +108,7 @@ class AlternativeAnimeScraper:
                             elif 'OVA' in info_text:
                                 anime_data['content_type'] = 'OVA'
                         
-                        # Extract score
+
                         score_elem = row.find('span', class_='text')
                         if score_elem:
                             anime_data['viewer_reviews'] = score_elem.get_text(strip=True)
@@ -131,18 +129,18 @@ class AlternativeAnimeScraper:
     def scrape_myanimelist_comprehensive(self, max_anime=10000):
         """Scrape comprehensive anime data from multiple MAL categories"""
         all_anime_data = []
-        seen_titles = set()  # Avoid duplicates
+        seen_titles = set() 
         
-        # Different categories to scrape from
+
         categories = [
-            'topanime.php',  # Top anime by score
-            'topanime.php?type=bypopularity',  # By popularity
-            'topanime.php?type=upcoming',  # Upcoming
-            'topanime.php?type=airing',  # Currently airing
-            'topanime.php?type=tv',  # TV series
-            'topanime.php?type=movie',  # Movies
-            'topanime.php?type=ova',  # OVAs
-            'topanime.php?type=special'  # Specials
+            'topanime.php',  
+            'topanime.php?type=bypopularity',  
+            'topanime.php?type=upcoming', 
+            'topanime.php?type=airing', 
+            'topanime.php?type=tv', 
+            'topanime.php?type=movie', 
+            'topanime.php?type=ova',  
+            'topanime.php?type=special' 
         ]
         
         for category in categories:
@@ -200,7 +198,7 @@ class AlternativeAnimeScraper:
                 except Exception as e:
                     print(f"    Error scraping page {page}: {e}")
                     consecutive_empty_pages += 1
-                    time.sleep(5)  # Longer wait on error
+                    time.sleep(5) 
                     page += 1
                     continue
             
@@ -209,7 +207,7 @@ class AlternativeAnimeScraper:
             if len(all_anime_data) >= max_anime:
                 break
         
-    def scrape_myanimelist_simple(self, max_pages=100):  # Changed from 400 to 100 (100×50=5000)
+    def scrape_myanimelist_simple(self, max_pages=100): 
         """Simple reliable MyAnimeList scraper for 5000 anime"""
         all_anime_data = []
         base_url = "https://myanimelist.net/topanime.php"
@@ -221,13 +219,13 @@ class AlternativeAnimeScraper:
             print(f"Scraping page {page + 1}/{max_pages}: {url}")
             
             try:
-                # Random delay between 2-5 seconds to avoid rate limiting
+
                 time.sleep(random.uniform(2, 5))
                 
-                response = self.session.get(url, timeout=15)  # Increased timeout
+                response = self.session.get(url, timeout=15) 
                 if response.status_code != 200:
                     print(f"  Status code: {response.status_code}")
-                    if response.status_code == 429:  # Rate limited
+                    if response.status_code == 429: 
                         print("  Rate limited, waiting 30 seconds...")
                         time.sleep(30)
                         continue
@@ -237,12 +235,12 @@ class AlternativeAnimeScraper:
                 
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
-                # Look for anime entries
+
                 anime_rows = soup.find_all('tr', class_='ranking-list')
                 
                 if not anime_rows:
                     print(f"  No anime found on page {page + 1}")
-                    break  # Stop if no more anime found
+                    break  
                 
                 page_count = 0
                 for row in anime_rows:
@@ -257,17 +255,17 @@ class AlternativeAnimeScraper:
                 
                 print(f"  Found {page_count} anime on this page. Total: {len(all_anime_data)}")
                 
-                # Early exit if we've reached our target
+
                 if len(all_anime_data) >= 5000:
                     print("Reached target of 5000 anime")
                     break
                     
             except Exception as e:
                 print(f"  Error on page {page + 1}: {e}")
-                time.sleep(10)  # Longer wait on error
+                time.sleep(10) 
                 continue
         
-        return all_anime_data[:5000]  # Ensure we return exactly 5000
+        return all_anime_data[:5000]  
     
     def extract_mal_anime_data(self, row):
         """Extract anime data from a MAL row element"""
@@ -282,17 +280,17 @@ class AlternativeAnimeScraper:
             'source': 'MyAnimeList'
         }
         
-        # Extract title
+
         title_elem = row.find('a', class_='hoverinfo_trigger')
         if title_elem:
             anime_data['title'] = title_elem.get_text(strip=True)
         
-        # Extract additional info
+
         info_elem = row.find('div', class_='information')
         if info_elem:
             info_text = info_elem.get_text()
             
-            # Extract episodes
+
             ep_match = re.search(r'(\d+) eps', info_text)
             if ep_match:
                 anime_data['number_of_episodes'] = ep_match.group(1)
@@ -358,7 +356,7 @@ class AlternativeAnimeScraper:
         
         all_anime_data = []
         
-        for page in range(1, max_pages + 1):  # Get more pages
+        for page in range(1, max_pages + 1): 
             variables = {
                 'page': page,
                 'perPage': 50
@@ -391,12 +389,12 @@ class AlternativeAnimeScraper:
                     
                     print(f"Page {page}: Added {len(page_data['media'])} anime. Total: {len(all_anime_data)}")
                     
-                    # Check if there's a next page
+
                     if not page_data['pageInfo']['hasNextPage']:
                         print("Reached last page")
                         break
                 
-                time.sleep(1)  # API rate limiting
+                time.sleep(1) 
                 
             except Exception as e:
                 print(f"Error with AniList API page {page}: {e}")
@@ -404,7 +402,7 @@ class AlternativeAnimeScraper:
         
         return all_anime_data
 
-# Approach 3: Selenium-based Scraper (for JavaScript-heavy sites)
+
 def create_selenium_scraper():
     """Instructions for Selenium-based scraping"""
     selenium_code = '''
